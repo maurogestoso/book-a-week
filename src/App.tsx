@@ -31,7 +31,11 @@ function App() {
                 <CardHeader>
                   <CardTitle>{book.title}</CardTitle>
                 </CardHeader>
-                <CardContent></CardContent>
+                <CardContent>
+                  <p>
+                    {`Progress: ${book.currentPage.toString()} / ${book.totalPages}`}
+                  </p>
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -54,8 +58,13 @@ function Header() {
 type Book = {
   title: string;
   totalPages: number;
+  currentPage: number;
   daysToFinish: number;
   startDate: Date;
+  log: {
+    date: Date;
+    pages: number;
+  }[];
 };
 
 function AddBookForm({ onSubmit }: { onSubmit: (book: Book) => void }) {
@@ -67,9 +76,11 @@ function AddBookForm({ onSubmit }: { onSubmit: (book: Book) => void }) {
         const formData = new FormData(form);
         const book: Book = {
           title: formData.get("title") as string,
+          currentPage: 0,
           totalPages: parseInt(formData.get("totalPages") as string),
           daysToFinish: parseInt(formData.get("daysToFinish") as string),
           startDate: new Date(),
+          log: [],
         };
         onSubmit(book);
         form.reset();
