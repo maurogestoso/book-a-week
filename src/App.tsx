@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./App.css";
 import { BookCheck } from "lucide-react";
 import { Input } from "./components/ui/input";
@@ -8,14 +9,30 @@ import {
   FieldLegend,
   FieldSet,
 } from "./components/ui/field";
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Button } from "./components/ui/button";
 
 function App() {
   const [books, setBooks] = useState<Book[]>([]);
 
   function addBook(book: Book) {
     setBooks([...books, book]);
+  }
+
+  function updateBook(targetBook: Book) {
+    return function (readUntil: number) {
+      setBooks(
+        books.map((book) => {
+          if (targetBook.title === book.title) {
+            return {
+              ...book,
+              currentPage: readUntil,
+            };
+          }
+          return book;
+        }),
+      );
+    };
   }
 
   return (
@@ -25,18 +42,13 @@ function App() {
         <main className="mt-4">
           <AddBookForm onSubmit={addBook} />
           <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Books:</h2>
+            <h2 className="text-2xl font-bold mb-4">Books</h2>
             {books.map((book) => (
-              <Card key={book.title}>
-                <CardHeader>
-                  <CardTitle>{book.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    {`Progress: ${book.currentPage.toString()} / ${book.totalPages}`}
-                  </p>
-                </CardContent>
-              </Card>
+              <BookCard
+                key={book.title}
+                book={book}
+                onReadUpdate={updateBook(book)}
+              />
             ))}
           </div>
         </main>
@@ -59,8 +71,9 @@ type Book = {
   title: string;
   totalPages: number;
   currentPage: number;
-  daysToFinish: number;
+  dailyPages: number;
   startDate: Date;
+  endDate: Date;
   log: {
     date: Date;
     pages: number;
@@ -74,12 +87,19 @@ function AddBookForm({ onSubmit }: { onSubmit: (book: Book) => void }) {
         e.preventDefault();
         const form = e.currentTarget;
         const formData = new FormData(form);
+        const title = formData.get("title") as string;
+        const totalPages = parseInt(formData.get("totalPages") as string);
         const book: Book = {
-          title: formData.get("title") as string,
+          title,
+          totalPages,
           currentPage: 0,
-          totalPages: parseInt(formData.get("totalPages") as string),
-          daysToFinish: parseInt(formData.get("daysToFinish") as string),
+          dailyPages: Math.ceil(totalPages / 7),
           startDate: new Date(),
+          endDate: (() => {
+            const end = new Date();
+            end.setDate(end.getDate() + 7);
+            return end;
+          })(),
           log: [],
         };
         onSubmit(book);
@@ -103,16 +123,6 @@ function AddBookForm({ onSubmit }: { onSubmit: (book: Book) => void }) {
                 required
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="days-to-finish">Days to finish:</FieldLabel>
-              <Input
-                type="number"
-                defaultValue={7}
-                id="days-to-finish"
-                name="daysToFinish"
-                required
-              />
-            </Field>
           </FieldGroup>
         </FieldSet>
         <Field>
@@ -120,5 +130,57 @@ function AddBookForm({ onSubmit }: { onSubmit: (book: Book) => void }) {
         </Field>
       </FieldGroup>
     </form>
+  );
+}
+
+function BookCard({
+  book,
+  onReadUpdate,
+}: {
+  book: Book;
+  onReadUpdate: (readUntil: number) => void;
+}) {
+  const [seeUpdateForm, setSeeUpdateForm] = useState(false);
+  return (
+    <Card key={book.title}>
+      <CardHeader>
+        <CardTitle>{book.title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>{`Progress: ${book.currentPage.toString()} / ${book.totalPages}`}</p>
+        <p>
+          Read <b>until page {book.currentPage + book.dailyPages}</b> to stay on
+          track!
+        </p>
+        {seeUpdateForm ? (
+          <form
+            onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const formData = new FormData(form);
+              const readUntil = parseInt(formData.get("readUntil") as string);
+              onReadUpdate(readUntil);
+              setSeeUpdateForm(false);
+              form.reset();
+            }}
+          >
+            <Field orientation={"horizontal"}>
+              <Input
+                name="readUntil"
+                type="number"
+                placeholder="Read until page..."
+                autoFocus
+              />
+              <Button>Update</Button>
+              <Button variant="ghost" onClick={() => setSeeUpdateForm(false)}>
+                Cancel
+              </Button>
+            </Field>
+          </form>
+        ) : (
+          <Button onClick={() => setSeeUpdateForm(true)}>Read!</Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }
