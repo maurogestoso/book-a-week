@@ -25,3 +25,27 @@ export function getBooksFromLocalStorage() {
   if (!books) return null;
   return v.parse(BooksSchema, JSON.parse(books));
 }
+
+export function newBook({
+  totalPages,
+  title,
+}: {
+  totalPages: number;
+  title: string;
+}): Book {
+  return {
+    title,
+    totalPages,
+    currentPage: 0,
+    dailyPages: Math.ceil(totalPages / 7),
+    startDate: new Date(),
+    isFinished: false,
+    isAbandoned: false,
+    endDate: (() => {
+      const end = new Date();
+      end.setDate(end.getDate() + 7);
+      return end;
+    })(),
+    log: [],
+  };
+}

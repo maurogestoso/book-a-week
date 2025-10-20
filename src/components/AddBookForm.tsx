@@ -6,7 +6,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "./ui/field";
-import type { Book } from "@/lib/book";
+import { newBook, type Book } from "@/lib/book";
 
 export default function AddBookForm({
   onSubmit,
@@ -21,19 +21,7 @@ export default function AddBookForm({
         const formData = new FormData(form);
         const title = formData.get("title") as string;
         const totalPages = parseInt(formData.get("totalPages") as string);
-        const book: Book = {
-          title,
-          totalPages,
-          currentPage: 0,
-          dailyPages: Math.ceil(totalPages / 7),
-          startDate: new Date(),
-          endDate: (() => {
-            const end = new Date();
-            end.setDate(end.getDate() + 7);
-            return end;
-          })(),
-          log: [],
-        };
+        const book = newBook({ title, totalPages });
         onSubmit(book);
         form.reset();
       }}
