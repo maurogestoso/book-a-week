@@ -24,9 +24,17 @@ function App() {
       setBooks(
         books.map((book) => {
           if (targetBook.title === book.title) {
+            const pagesRead = readUntil - book.currentPage;
             return {
               ...book,
               currentPage: readUntil,
+              log: [
+                ...book.log,
+                {
+                  date: new Date(),
+                  pages: pagesRead,
+                },
+              ],
             };
           }
           return book;
@@ -141,6 +149,19 @@ function BookCard({
   onReadUpdate: (readUntil: number) => void;
 }) {
   const [seeUpdateForm, setSeeUpdateForm] = useState(false);
+  function isReadingGoalMet(book: Book): boolean {
+    const lastUpdate = book.log.at(-1);
+    if (!lastUpdate) return false;
+    const today = new Date();
+    if (
+      today.getDate() === lastUpdate.date.getDate() &&
+      today.getMonth() === lastUpdate.date.getMonth() &&
+      today.getFullYear() === lastUpdate.date.getFullYear()
+    ) {
+      return lastUpdate.pages >= book.dailyPages;
+    }
+    return false;
+  }
   return (
     <Card key={book.title}>
       <CardHeader>
@@ -148,10 +169,15 @@ function BookCard({
       </CardHeader>
       <CardContent>
         <p>{`Progress: ${book.currentPage.toString()} / ${book.totalPages}`}</p>
-        <p>
-          Read <b>until page {book.currentPage + book.dailyPages}</b> to stay on
-          track!
-        </p>
+        {isReadingGoalMet(book) ? (
+          <p>You've met your reading goal for today!</p>
+        ) : (
+          <p>
+            Read <b>until page {book.currentPage + book.dailyPages}</b> to stay
+            on track!
+          </p>
+        )}
+
         {seeUpdateForm ? (
           <form
             onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
