@@ -13,6 +13,7 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  base: process.env.GITHUB_ACTIONS ? "/book-a-week/" : "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
