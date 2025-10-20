@@ -9,7 +9,13 @@ import {
   FieldLegend,
   FieldSet,
 } from "./components/ui/field";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./components/ui/card";
 import { Button } from "./components/ui/button";
 
 function App() {
@@ -177,7 +183,8 @@ function BookCard({
             on track!
           </p>
         )}
-
+      </CardContent>
+      <CardFooter>
         {seeUpdateForm ? (
           <form
             onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
@@ -206,7 +213,7 @@ function BookCard({
         ) : (
           <Button onClick={() => setSeeUpdateForm(true)}>Read!</Button>
         )}
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }
