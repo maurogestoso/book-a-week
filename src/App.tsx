@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { BookCheck } from "lucide-react";
 import { Input } from "./components/ui/input";
@@ -18,12 +18,37 @@ import {
 } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 
+function getBooksFromLocalStorage(): Book[] | null {
+  const books = localStorage.getItem("books");
+  if (!books) return null;
+
+  return JSON.parse(books).map(
+    (book: Book) =>
+      ({
+        title: book.title,
+        currentPage: book.currentPage,
+        totalPages: book.totalPages,
+        dailyPages: book.dailyPages,
+        startDate: new Date(book.startDate),
+        endDate: new Date(book.endDate),
+        log: book.log.map((log) => ({
+          pages: log.pages,
+          date: new Date(log.date),
+        })),
+      }) as Book,
+  );
+}
+
 function App() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<Book[]>(getBooksFromLocalStorage() ?? []);
 
   function addBook(book: Book) {
     setBooks([...books, book]);
   }
+
+  useEffect(() => {
+    localStorage.setItem("books", JSON.stringify(books));
+  }, [books]);
 
   function updateBook(targetBook: Book) {
     return function (readUntil: number) {
