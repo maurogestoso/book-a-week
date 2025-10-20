@@ -1,33 +1,27 @@
-export type Book = {
-  title: string;
-  totalPages: number;
-  currentPage: number;
-  dailyPages: number;
-  startDate: Date;
-  endDate: Date;
-  log: {
-    date: Date;
-    pages: number;
-  }[];
-};
+import * as v from "valibot";
 
-export function getBooksFromLocalStorage(): Book[] | null {
+const BookSchema = v.object({
+  title: v.string(),
+  totalPages: v.number(),
+  currentPage: v.number(),
+  dailyPages: v.number(),
+  startDate: v.date(),
+  endDate: v.date(),
+  isFinished: v.boolean(),
+  isAbandoned: v.boolean(),
+  log: v.array(
+    v.object({
+      date: v.date(),
+      pages: v.number(),
+    }),
+  ),
+});
+const BooksSchema = v.array(BookSchema);
+
+export type Book = v.InferOutput<typeof BookSchema>;
+
+export function getBooksFromLocalStorage() {
   const books = localStorage.getItem("books");
   if (!books) return null;
-
-  return JSON.parse(books).map(
-    (book: Book) =>
-      ({
-        title: book.title,
-        currentPage: book.currentPage,
-        totalPages: book.totalPages,
-        dailyPages: book.dailyPages,
-        startDate: new Date(book.startDate),
-        endDate: new Date(book.endDate),
-        log: book.log.map((log) => ({
-          pages: log.pages,
-          date: new Date(log.date),
-        })),
-      }) as Book,
-  );
+  return v.parse(BooksSchema, JSON.parse(books));
 }
